@@ -1,0 +1,6 @@
+.idea
+.venvFastAPI
+.env
+__pycache__/
+*.pyc
+
