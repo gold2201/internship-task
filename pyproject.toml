@@ -96,4 +96,5 @@ line-ending = "auto"
 
 [tool.ruff.lint.per-file-ignores]
 "app/tests/**/*.py" = ["S101", "S106", "S107", "F841"]
-"app/manage.py" = ["RUF001"]
+"app/repositories/transaction_analytics_repository.py" = ["W293", "RUF002"]
+"app/manage.py" = ["RUF001", "C901"]

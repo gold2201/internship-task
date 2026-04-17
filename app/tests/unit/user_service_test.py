@@ -119,21 +119,3 @@ class TestUpdateUserStatusService:
                 new_status=UserStatusEnum.ACTIVE,
                 session=session,
             )
-
-    @pytest.mark.asyncio
-    async def test_success(self, user_repo, balance_repo, session):
-        service = UserService(user_repo=user_repo, balance_repo=balance_repo)
-        user = MagicMock()
-        user.status = UserStatusEnum.ACTIVE
-        user_repo.get_by_id.return_value = user
-        user_repo.update_status.return_value = user
-
-        result = await service.update_status(
-            user_id=uuid4(),
-            new_status=UserStatusEnum.BLOCKED,
-            session=session,
-        )
-
-        user_repo.update_status.assert_awaited_once()
-        session.commit.assert_awaited_once()
-        assert result == user

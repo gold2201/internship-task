@@ -67,7 +67,11 @@ class TransactionRepository:
         return parse_transaction(tx)
 
     async def delete(self, transaction_id: str) -> bool:
+        tx = await self.get_by_id(transaction_id)
+        if not tx:
+            return False
+
         stmt = delete(Transaction).where(Transaction.id == transaction_id)
-        res = await self.session.execute(stmt)
+        await self.session.execute(stmt)
         await self.session.commit()
-        return res.rowcount > 0
+        return True

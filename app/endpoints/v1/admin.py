@@ -39,10 +39,10 @@ async def update_user(
     update_data: RequestUserUpdate,
     session: AsyncSession = Depends(db_manager.get_async_session),
     service: UserService = Depends(get_user_service),
-) -> ResponseUserModel:
-    updated_user = await service.update_status(
+) -> ResponseUserModel | None:
+    updated_user = await service.update_user(
         user_id=user_id,
-        new_status=update_data.status,
+        update_data=update_data,
         session=session,
     )
     return updated_user

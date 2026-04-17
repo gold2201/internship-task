@@ -38,30 +38,15 @@ class UserBalanceRepository:
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def create_balance(self, user_id: UUID, currency: str, amount: Decimal) -> UserBalance:
-        balance = UserBalance(
-            user_id=user_id,
-            currency=currency,
-            amount=amount,
-        )
-        self.session.add(balance)
-        await self.session.commit()
-        await self.session.refresh(balance)
-        return balance
-
-    async def delete_balance(self, balance_id: UUID) -> bool:
-        balance = await self.get_by_id(balance_id)
-        if balance:
-            await self.session.delete(balance)
-            await self.session.commit()
-            return True
-        return False
-
     async def delete_by_user_and_currency(self, user_id: UUID, currency: str) -> bool:
+        balance = await self.get_by_user_and_currency(user_id, currency)
+        if not balance:
+            return False
+
         stmt = delete(UserBalance).where(
             UserBalance.user_id == user_id,
             UserBalance.currency == currency,
         )
-        result = await self.session.execute(stmt)
+        await self.session.execute(stmt)
         await self.session.commit()
-        return result.rowcount > 0
+        return True
