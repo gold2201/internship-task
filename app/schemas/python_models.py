@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel
 from pydantic.v1 import root_validator
@@ -63,10 +64,11 @@ class UserBalanceModel(BaseModel):
     amount: float | None = None
 
     @root_validator(pre=True)
-    def validate_not_negative(self, values):
-        if "amount" in values and values.get("amount"):
-            if values["amount"] < 0:
-                raise ValueError("Amount cannot be negative")
+    def validate_not_negative(self, values: dict[str, Any]) -> dict[str, Any]:
+        amount = values.get("amount")
+
+        if amount is not None and amount < 0:
+            raise ValueError("Amount cannot be negative")
 
         return values
 

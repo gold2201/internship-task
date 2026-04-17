@@ -71,6 +71,8 @@ select = [
     "SIM"
 ]
 
+ignore = ["B008"]
+
 fixable = ["I", "UP", "RUF", "E", "W", "F", "Q"]
 
 [tool.ruff.format]
