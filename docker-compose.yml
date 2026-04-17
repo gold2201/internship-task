@@ -35,5 +35,49 @@ services:
       timeout: 5s
       retries: 5
 
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A app.celery_app worker --loglevel=info --concurrency=1
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      PYTHONPATH: /app
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A app.celery_app flower --port=5555
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      PYTHONPATH: /app
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+      - celery_worker
+
+  redis:
+    image: redis:7.2-alpine
+    ports:
+      - "6379:6379"
+
 volumes:
   postgres_data:

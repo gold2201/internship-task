@@ -1,86 +1,37 @@
-from datetime import datetime, timedelta
-
-from fastapi import Depends, status
-from sqlalchemy.ext.asyncio import AsyncSession
+import logging
+import typing
 
 from app.api.routers import analysis_router
-from app.db.session import db_manager
-from app.repositories.transaction_analytics_repository import TransactionAnalyticsRepository
-from app.repositories.user_analytics_repository import UserAnalyticsRepository
+from app.celery_app import celery_app
 from app.schemas.analitics import TransactionAnalysisItem
-from app.services.transaction_analytics_service import (
-    get_not_rollbacked_deposit_amount,
-    get_not_rollbacked_withdraw_amount,
-)
+from app.services.transaction_analytics_service import get_cached_or_trigger_analysis
+
+logger = logging.getLogger(__name__)
 
 
-@analysis_router.get(
-    "/transactions/analysis", response_model=list[TransactionAnalysisItem], status_code=status.HTTP_200_OK
-)
-async def get_transaction_analysis(
-    session: AsyncSession = Depends(db_manager.get_async_session),
-) -> list[TransactionAnalysisItem]:
-    now = datetime.now()
-    dt_gt: datetime = now - timedelta(weeks=1)
-    dt_lt: datetime = now
+@analysis_router.get("", response_model=list[TransactionAnalysisItem])
+async def get_transaction_analysis() -> list[TransactionAnalysisItem]:
+    logger.info("Request for transaction analysis")
 
-    results: list[TransactionAnalysisItem] = []
+    try:
+        result = await get_cached_or_trigger_analysis()
+        logger.info("Transaction analysis returned %d records", len(result))
+        return result
 
-    transaction_analytics_repo = TransactionAnalyticsRepository(session)
-    user_analytics_repo = UserAnalyticsRepository(session)
+    except Exception:
+        logger.exception("Failed to get transaction analysis")
+        raise
 
-    for _ in range(52):
-        registered_users_count = await user_analytics_repo.get_registered_users_count(dt_gt=dt_gt, dt_lt=dt_lt)
-        registered_and_deposit_users_count = await user_analytics_repo.get_registered_and_deposit_users_count(
-            dt_gt=dt_gt, dt_lt=dt_lt
-        )
-        registered_and_not_rollbacked_deposit_users_count = (
-            await user_analytics_repo.get_registered_and_not_rollbacked_deposit_users_count(dt_gt=dt_gt, dt_lt=dt_lt)
-        )
 
-        not_rollbacked_deposit_rows = await transaction_analytics_repo.get_not_rollbacked_deposit_rows(
-            dt_gt=dt_gt, dt_lt=dt_lt
-        )
-        not_rollbacked_deposit_amount = get_not_rollbacked_deposit_amount(not_rollbacked_deposit_rows)
+@analysis_router.post("/refresh")
+async def refresh_analysis() -> dict[str, typing.Any]:
+    logger.info("Manual refresh of transaction analysis triggered")
 
-        not_rollbacked_withdraw_rows = await transaction_analytics_repo.get_not_rollbacked_withdraw_rows(
-            dt_gt=dt_gt, dt_lt=dt_lt
-        )
-        not_rollbacked_withdraw_amount = get_not_rollbacked_withdraw_amount(not_rollbacked_withdraw_rows)
+    try:
+        task = celery_app.send_task("generate_transaction_analysis")
+        logger.info("Analysis refresh task created: task_id=%s", task.id)
+        return {"task_id": str(task.id), "status": "processing"}
 
-        transactions_count = await transaction_analytics_repo.get_transactions_count(dt_gt=dt_gt, dt_lt=dt_lt)
-        not_rollbacked_transactions_count = await transaction_analytics_repo.get_not_rollbacked_transactions_count(
-            dt_gt=dt_gt, dt_lt=dt_lt
-        )
-
-        result = TransactionAnalysisItem(
-            start_date=dt_gt,
-            end_date=dt_lt,
-            registered_users_count=registered_users_count,
-            registered_and_deposit_users_count=registered_and_deposit_users_count,
-            registered_and_not_rollbacked_deposit_users_count=registered_and_not_rollbacked_deposit_users_count,
-            not_rollbacked_deposit_amount=not_rollbacked_deposit_amount,
-            not_rollbacked_withdraw_amount=not_rollbacked_withdraw_amount,
-            transactions_count=transactions_count,
-            not_rollbacked_transactions_count=not_rollbacked_transactions_count,
-        )
-
-        has_data = any(
-            [
-                result.registered_users_count > 0,
-                result.registered_and_deposit_users_count > 0,
-                result.registered_and_not_rollbacked_deposit_users_count > 0,
-                result.not_rollbacked_deposit_amount > 0,
-                result.not_rollbacked_withdraw_amount > 0,
-                result.transactions_count > 0,
-                result.not_rollbacked_transactions_count > 0,
-            ]
-        )
-
-        if has_data:
-            results.append(result)
-
-        dt_gt -= timedelta(weeks=1)
-        dt_lt -= timedelta(weeks=1)
-
-    return results
+    except Exception:
+        logger.exception("Failed to trigger analysis refresh")
+        raise
