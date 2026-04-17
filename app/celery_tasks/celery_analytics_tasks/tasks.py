@@ -102,10 +102,12 @@ def generate_transaction_analysis(self) -> dict[str, Any]:
 
         data = generate_analysis()
 
+        data_dicts = [item.model_dump(mode="json") for item in data]
+
         elapsed = (datetime.now() - start_time).total_seconds()
         logger.info("Celery task completed: task_id=%s, weeks=%d, time=%.2fs", task_id, len(data), elapsed)
 
-        return {"status": "completed", "data": data, "generated_at": datetime.now().isoformat()}
+        return {"status": "completed", "data": data_dicts, "generated_at": datetime.now().isoformat()}
 
     except Exception as exc:
         logger.exception("Celery task failed: task_id=%s, error=%s", task_id, exc)

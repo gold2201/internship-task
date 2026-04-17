@@ -10,9 +10,9 @@ from app.core.security import (
     get_password_hash,
     verify_password,
 )
+from app.models.db_models import User
 from app.repositories.token_repository import TokenRepository
 from app.repositories.user_repository import UserRepository
-from app.schemas.user import ResponseUserModel
 
 
 class AuthService:
@@ -20,7 +20,7 @@ class AuthService:
         self.user_repo = user_repo
         self.token_repo = token_repo
 
-    async def sign_up(self, email: str, password: str) -> ResponseUserModel:
+    async def sign_up(self, email: str, password: str) -> User:
         existing_user = await self.user_repo.get_by_email(email)
         if existing_user:
             raise HTTPException(

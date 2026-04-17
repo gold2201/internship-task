@@ -1,8 +1,8 @@
 import logging
 import typing
 
-from app.api.routers import analysis_router
 from app.celery_app import celery_app
+from app.endpoints.routers import analysis_router
 from app.schemas.analitics import TransactionAnalysisItem
 from app.services.transaction_analytics_service import get_cached_or_trigger_analysis
 
