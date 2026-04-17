@@ -10,7 +10,7 @@ from app.core.settings import settings
 from app.db.base import Base
 
 # Импортируем все модели, чтобы Alembic их видел
-from app.models.db_models import User, UserBalance, Transaction, RefreshToken  # noqa: F401
+from app.models.db_models import RefreshToken, Transaction, User, UserBalance  # noqa: F401
 
 config = context.config
 

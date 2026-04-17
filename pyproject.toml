@@ -25,6 +25,7 @@ redis = "^7.4.0"
 flower = "^2.0.1"
 psycopg2-binary = "^2.9.12"
 pydantic-settings = "^2.14.1"
+alembic = "^1.18.4"
 
 [tool.poetry.group.dev.dependencies]
 faker = "^19.10.0"
@@ -94,5 +95,5 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.ruff.lint.per-file-ignores]
-"app/tests/**/*.py" = ["S101", "S106", "S107"]
+"app/tests/**/*.py" = ["S101", "S106", "S107", "F841"]
 "app/manage.py" = ["RUF001"]

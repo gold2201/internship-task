@@ -1,5 +1,6 @@
 from decimal import Decimal
 from unittest.mock import ANY, MagicMock
+from uuid import uuid4
 
 import pytest
 
@@ -13,8 +14,12 @@ from app.exceptions.exceptions import (
 )
 from app.services.transaction_service import TransactionService
 
+TEST_UUID = uuid4()
+TEST_TX_ID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+OTHER_UUID = uuid4()
 
-def make_balance(balance_id=10, amount=Decimal("100.0")):
+
+def make_balance(balance_id=TEST_UUID, amount=Decimal("100.0")):
     balance = MagicMock()
     balance.id = balance_id
     balance.amount = amount
@@ -22,7 +27,7 @@ def make_balance(balance_id=10, amount=Decimal("100.0")):
 
 
 def make_transaction(
-    user_id=1,
+    user_id=TEST_UUID,
     status=TransactionStatusEnum.PROCESSED,
     currency=CurrencyEnum.USD,
     amount=Decimal("100.0"),
@@ -53,10 +58,10 @@ class TestGetTransactions:
         expected = [MagicMock()]
         transaction_repo.list.return_value = expected
 
-        result = await service.get_transactions(user_id=1)
+        result = await service.get_transactions(user_id=TEST_UUID)
 
         assert result == expected
-        transaction_repo.list.assert_awaited_once_with(user_id=1)
+        transaction_repo.list.assert_awaited_once_with(user_id=TEST_UUID)
 
 
 class TestCreateTransactionValidation:
@@ -66,7 +71,7 @@ class TestCreateTransactionValidation:
 
         with pytest.raises(BadRequestDataException) as exc_info:
             await service.create_transaction(
-                user_id=1,
+                user_id=TEST_UUID,
                 amount=Decimal("0"),
                 currency=CurrencyEnum.USD,
                 session=session,
@@ -82,7 +87,7 @@ class TestCreateTransactionBalanceChecks:
 
         with pytest.raises(BadRequestDataException) as exc_info:
             await service.create_transaction(
-                user_id=1,
+                user_id=TEST_UUID,
                 amount=Decimal("100.0"),
                 currency=CurrencyEnum.USD,
                 session=session,
@@ -97,13 +102,13 @@ class TestCreateTransactionBalanceChecks:
 
         with pytest.raises(NegativeBalanceException):
             await service.create_transaction(
-                user_id=1,
+                user_id=TEST_UUID,
                 amount=Decimal("-100.0"),
                 currency=CurrencyEnum.USD,
                 session=session,
             )
 
-        balance_repo.get_by_user_and_currency.assert_awaited_once_with(1, CurrencyEnum.USD)
+        balance_repo.get_by_user_and_currency.assert_awaited_once_with(TEST_UUID, CurrencyEnum.USD)
 
 
 class TestCreateTransactionSuccess:
@@ -115,17 +120,17 @@ class TestCreateTransactionSuccess:
         transaction_repo.create_transaction.return_value = expected_txn
 
         result = await service.create_transaction(
-            user_id=1,
+            user_id=TEST_UUID,
             amount=Decimal("50.0"),
             currency=CurrencyEnum.USD,
             session=session,
         )
 
-        balance_repo.update_balance.assert_awaited_once_with(10, Decimal("150.0"))
+        balance_repo.update_balance.assert_awaited_once_with(TEST_UUID, Decimal("150.0"))
 
         call_kwargs = transaction_repo.create_transaction.call_args.kwargs
         assert call_kwargs == {
-            "user_id": 1,
+            "user_id": TEST_UUID,
             "currency": CurrencyEnum.USD,
             "amount": Decimal("50.0"),
             "status": TransactionStatusEnum.PROCESSED,
@@ -143,13 +148,13 @@ class TestCreateTransactionSuccess:
         transaction_repo.create_transaction.return_value = expected_txn
 
         result = await service.create_transaction(
-            user_id=1,
+            user_id=TEST_UUID,
             amount=Decimal("-30.0"),
             currency=CurrencyEnum.USD,
             session=session,
         )
 
-        balance_repo.update_balance.assert_awaited_once_with(10, Decimal("70.0"))
+        balance_repo.update_balance.assert_awaited_once_with(TEST_UUID, Decimal("70.0"))
         session.commit.assert_awaited_once()
         assert result == expected_txn
 
@@ -162,20 +167,20 @@ class TestRollbackExistenceChecks:
 
         with pytest.raises(TransactionNotExistsException):
             await service.rollback_transaction(
-                user_id=1,
-                transaction_id=1,
+                user_id=TEST_UUID,
+                transaction_id=TEST_TX_ID,
                 session=session,
             )
 
     @pytest.mark.asyncio
     async def test_transaction_belongs_to_other_user(self, transaction_repo, balance_repo, session):
         service = TransactionService(transaction_repo=transaction_repo, balance_repo=balance_repo)
-        transaction_repo.get_by_id.return_value = make_transaction(user_id=999)
+        transaction_repo.get_by_id.return_value = make_transaction(user_id=OTHER_UUID)
 
         with pytest.raises(TransactionDoesNotBelongToUserException):
             await service.rollback_transaction(
-                user_id=1,
-                transaction_id=1,
+                user_id=TEST_UUID,
+                transaction_id=TEST_TX_ID,
                 session=session,
             )
 
@@ -186,8 +191,8 @@ class TestRollbackExistenceChecks:
 
         with pytest.raises(TransactionAlreadyRollbackedException):
             await service.rollback_transaction(
-                user_id=1,
-                transaction_id=1,
+                user_id=TEST_UUID,
+                transaction_id=TEST_TX_ID,
                 session=session,
             )
 
@@ -201,8 +206,8 @@ class TestRollbackStateChecks:
 
         with pytest.raises(BadRequestDataException) as exc_info:
             await service.rollback_transaction(
-                user_id=1,
-                transaction_id=1,
+                user_id=TEST_UUID,
+                transaction_id=TEST_TX_ID,
                 session=session,
             )
         assert exc_info.value.status_code == 404
@@ -215,8 +220,8 @@ class TestRollbackStateChecks:
 
         with pytest.raises(NegativeBalanceException):
             await service.rollback_transaction(
-                user_id=1,
-                transaction_id=1,
+                user_id=TEST_UUID,
+                transaction_id=TEST_TX_ID,
                 session=session,
             )
 
@@ -232,13 +237,13 @@ class TestRollbackSuccess:
         transaction_repo.rollback_transaction.return_value = expected_txn
 
         result = await service.rollback_transaction(
-            user_id=1,
-            transaction_id=1,
+            user_id=TEST_UUID,
+            transaction_id=TEST_TX_ID,
             session=session,
         )
 
-        balance_repo.update_balance.assert_awaited_once_with(10, Decimal("100.0"))
-        transaction_repo.rollback_transaction.assert_awaited_once_with(1)
+        balance_repo.update_balance.assert_awaited_once_with(TEST_UUID, Decimal("100.0"))
+        transaction_repo.rollback_transaction.assert_awaited_once_with(TEST_TX_ID)
         session.commit.assert_awaited_once()
         assert result == expected_txn
 
@@ -252,11 +257,11 @@ class TestRollbackSuccess:
         transaction_repo.rollback_transaction.return_value = expected_txn
 
         result = await service.rollback_transaction(
-            user_id=1,
-            transaction_id=1,
+            user_id=TEST_UUID,
+            transaction_id=TEST_TX_ID,
             session=session,
         )
 
-        balance_repo.update_balance.assert_awaited_once_with(10, Decimal("150.0"))
+        balance_repo.update_balance.assert_awaited_once_with(TEST_UUID, Decimal("150.0"))
         session.commit.assert_awaited_once()
         assert result == expected_txn

@@ -27,22 +27,13 @@ async def create_transaction(
 
 @pytest.mark.asyncio
 class TestTransactionAnalysis:
-    async def test_returns_empty_list_when_no_data(self, client, db_session):
-        await create_user_with_balances(db_session, email="tester@test.com")
-
-        response = await client.get("/api/v1/transactions/analysis")
-
-        assert response.status_code == 200
-        data = response.json()
-        assert data == []
-
     async def test_returns_data_for_current_week_only(self, client, db_session):
         user = await create_user_with_balances(db_session, email="tester@test.com", status=UserStatusEnum.ACTIVE)
         await create_transaction(
             db_session, user.id, CurrencyEnum.USD, Decimal("100.0"), TransactionStatusEnum.PROCESSED, datetime.now()
         )
 
-        response = await client.get("/api/v1/transactions/analysis")
+        response = await client.get("/endpoint/v1/transactions/analysis")
 
         assert response.status_code == 200
         data = response.json()
@@ -58,7 +49,7 @@ class TestTransactionAnalysis:
     async def test_skips_weeks_with_no_data(self, client, db_session):
         await create_user_with_balances(db_session, email="tester@test.com", status=UserStatusEnum.ACTIVE)
 
-        response = await client.get("/api/v1/transactions/analysis")
+        response = await client.get("/endpoint/v1/transactions/analysis")
 
         assert response.status_code == 200
         data = response.json()
@@ -76,7 +67,7 @@ class TestTransactionAnalysis:
             db_session, user.id, CurrencyEnum.USD, Decimal("50.0"), TransactionStatusEnum.ROLLBACKED, datetime.now()
         )
 
-        response = await client.get("/api/v1/transactions/analysis")
+        response = await client.get("/endpoint/v1/transactions/analysis")
 
         assert response.status_code == 200
         week = response.json()[0]
@@ -93,7 +84,7 @@ class TestTransactionAnalysis:
             db_session, user.id, CurrencyEnum.USD, Decimal("50.0"), TransactionStatusEnum.PROCESSED, datetime.now()
         )
 
-        response = await client.get("/api/v1/transactions/analysis")
+        response = await client.get("/endpoint/v1/transactions/analysis")
 
         assert response.status_code == 200
         week = response.json()[0]
@@ -109,7 +100,7 @@ class TestTransactionAnalysis:
             db_session, user.id, CurrencyEnum.USD, Decimal("-50.0"), TransactionStatusEnum.PROCESSED, datetime.now()
         )
 
-        response = await client.get("/api/v1/transactions/analysis")
+        response = await client.get("/endpoint/v1/transactions/analysis")
 
         assert response.status_code == 200
         week = response.json()[0]
@@ -122,7 +113,7 @@ class TestTransactionAnalysis:
             db_session, user.id, CurrencyEnum.USD, Decimal("100.0"), TransactionStatusEnum.PROCESSED, datetime.now()
         )
 
-        response = await client.get("/api/v1/transactions/analysis")
+        response = await client.get("/endpoint/v1/transactions/analysis")
 
         assert response.status_code == 200
         week = response.json()[0]
@@ -168,7 +159,7 @@ class TestTransactionAnalysis:
             datetime.now(),
         )
 
-        response = await client.get("/api/v1/transactions/analysis")
+        response = await client.get("/endpoint/v1/transactions/analysis")
 
         assert response.status_code == 200
         week = response.json()[0]

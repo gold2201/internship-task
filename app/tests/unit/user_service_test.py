@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock
+from uuid import uuid4
 
 import pytest
 
@@ -13,25 +14,17 @@ from app.exceptions.exceptions import (
 from app.services.user_services import UserService
 
 
-class TestGetUsersService:
+class TestGetAllUsersService:
     @pytest.mark.asyncio
     async def test_returns_users(self, user_repo, balance_repo):
         service = UserService(user_repo=user_repo, balance_repo=balance_repo)
         expected_users = [object(), object()]
-        user_repo.list.return_value = expected_users
+        user_repo.get_all_users.return_value = expected_users
 
-        result = await service.get_users(
-            user_id=1,
-            email="test@test.com",
-            user_status=None,
-        )
+        result = await service.get_all_users()
 
         assert result == expected_users
-        user_repo.list.assert_awaited_once_with(
-            user_id=1,
-            email="test@test.com",
-            status=None,
-        )
+        user_repo.get_all_users.assert_awaited_once()
 
 
 class TestCreateUserService:
@@ -63,10 +56,13 @@ class TestCreateUserService:
         service = UserService(user_repo=user_repo, balance_repo=balance_repo)
         user_repo.get_by_email.return_value = None
 
+        test_uuid = uuid4()
+
         def add_user(user):
-            user.id = 1
+            user.id = test_uuid
 
         user_repo.add.side_effect = add_user
+        user_repo.get_by_id.return_value = object()
 
         result = await service.create_user(
             email="test@test.com",
@@ -91,7 +87,7 @@ class TestUpdateUserStatusService:
 
         with pytest.raises(UserNotExistsException):
             await service.update_status(
-                user_id=1,
+                user_id=uuid4(),
                 new_status=UserStatusEnum.ACTIVE,
                 session=session,
             )
@@ -105,7 +101,7 @@ class TestUpdateUserStatusService:
 
         with pytest.raises(UserAlreadyBlockedException):
             await service.update_status(
-                user_id=1,
+                user_id=uuid4(),
                 new_status=UserStatusEnum.BLOCKED,
                 session=session,
             )
@@ -119,7 +115,7 @@ class TestUpdateUserStatusService:
 
         with pytest.raises(UserAlreadyActiveException):
             await service.update_status(
-                user_id=1,
+                user_id=uuid4(),
                 new_status=UserStatusEnum.ACTIVE,
                 session=session,
             )
@@ -133,7 +129,7 @@ class TestUpdateUserStatusService:
         user_repo.update_status.return_value = user
 
         result = await service.update_status(
-            user_id=1,
+            user_id=uuid4(),
             new_status=UserStatusEnum.BLOCKED,
             session=session,
         )

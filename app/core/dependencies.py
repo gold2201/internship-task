@@ -1,4 +1,3 @@
-from typing import Any, Coroutine
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
@@ -77,8 +76,8 @@ async def get_user_repository(session: AsyncSession = Depends(db_manager.get_asy
 
 
 async def get_active_user(
-    current_user: User = Depends(get_current_user),
-) -> User:
+    current_user: ResponseUserModel = Depends(get_current_user),
+) -> ResponseUserModel:
     if current_user.status != UserStatusEnum.ACTIVE:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
