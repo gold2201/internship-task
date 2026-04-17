@@ -1,21 +1,12 @@
 import uuid
-from datetime import datetime
 
 import uuid6
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Numeric, String, UniqueConstraint
+from sqlalchemy import Column, ForeignKey, Numeric, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import relationship
 from ulid import ULID
 
-Base = declarative_base()
-
-
-class BaseModel(Base):
-    __abstract__ = True
-
-    created_at = Column(DateTime, default=datetime.now(), nullable=False)
-    updated_at = Column(DateTime, default=datetime.now(), onupdate=datetime.now, nullable=False)
-    is_active = Column(Boolean, default=True, nullable=False)
+from app.db.base import BaseModel
 
 
 class User(BaseModel):

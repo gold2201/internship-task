@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from app.core.settings import DATABASE_URL
+from app.core.settings import settings
 from app.db.base import Base
 
 
@@ -32,14 +32,4 @@ class DatabaseManager:
                 await session.close()
 
 
-db_manager = DatabaseManager(DATABASE_URL)
-
-
-async def get_db() -> typing.AsyncGenerator[AsyncSession]:
-    async with db_manager.async_session_maker() as session:
-        try:
-            yield session
-            await session.commit()
-        except Exception:
-            await session.rollback()
-            raise
+db_manager = DatabaseManager(settings.database_url)

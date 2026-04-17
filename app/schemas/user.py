@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from typing import Any
 
 from pydantic import BaseModel
@@ -17,7 +18,7 @@ class RequestUserUpdateModel(BaseModel):
 
 class ResponseUserBalanceModel(BaseModel):
     currency: CurrencyEnum | None = None
-    amount: float | None = None
+    amount: Decimal | None = None
 
 
 class ResponseUserModel(BaseModel):
@@ -39,7 +40,7 @@ class UserBalanceModel(BaseModel):
     id: int | None
     user_id: int | None = None
     currency: CurrencyEnum | None = None
-    amount: float | None = None
+    amount: Decimal | None = None
 
     @root_validator(pre=True)
     def validate_not_negative(self, values: dict[str, Any]) -> dict[str, Any]:
