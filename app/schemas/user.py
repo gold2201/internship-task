@@ -1,8 +1,9 @@
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
+from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from pydantic.v1 import root_validator
 
 from app.enums import CurrencyEnum, UserStatusEnum
@@ -18,12 +19,15 @@ class RequestUserUpdateModel(BaseModel):
 
 
 class ResponseUserBalanceModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     currency: CurrencyEnum | None = None
     amount: Decimal | None = None
 
 
 class ResponseUserModel(BaseModel):
-    id: int | None
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID | None = None
     email: str | None = None
     status: UserStatusEnum | None = None
     created: datetime | None = None
@@ -31,15 +35,19 @@ class ResponseUserModel(BaseModel):
 
 
 class UserModel(BaseModel):
-    id: int | None
+    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
+
+    id: UUID | None = None
     email: str | None = None
     status: UserStatusEnum | None = None
     created: datetime | None = None
 
 
 class UserBalanceModel(BaseModel):
-    id: int | None
-    user_id: int | None = None
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID | None = None
+    user_id: UUID | None = None
     currency: CurrencyEnum | None = None
     amount: Decimal | None = None
 

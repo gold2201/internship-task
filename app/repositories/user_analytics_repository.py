@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.enums import TransactionStatusEnum
+from app.enums import TransactionStatusEnum, UserStatusEnum
 from app.models.db_models import Transaction, User
 
 
@@ -26,6 +26,7 @@ class UserAnalyticsRepository:
             .where(
                 User.created >= dt_gt,
                 User.created < dt_lt,
+                User.status == UserStatusEnum.ACTIVE,
                 Transaction.created >= dt_gt,
                 Transaction.created < dt_lt,
                 Transaction.amount > 0,
@@ -41,6 +42,7 @@ class UserAnalyticsRepository:
             .where(
                 User.created >= dt_gt,
                 User.created < dt_lt,
+                User.status == UserStatusEnum.ACTIVE,
                 Transaction.created >= dt_gt,
                 Transaction.created < dt_lt,
                 Transaction.amount > 0,

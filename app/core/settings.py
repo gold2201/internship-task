@@ -6,9 +6,10 @@ class Settings(BaseSettings):
 
     POSTGRES_USER: str = ""
     POSTGRES_PASSWORD: str = ""
-    POSTGRES_HOST: str = "localhost"
+    POSTGRES_HOST: str = ""
     POSTGRES_PORT: int = 5432
     POSTGRES_DB: str = ""
+    TEST_DB: str = ""
 
     SECRET_KEY: str = ""
     ALGORITHM: str = ""
@@ -24,6 +25,17 @@ class Settings(BaseSettings):
             f"{self.POSTGRES_HOST}:"
             f"{self.POSTGRES_PORT}/"
             f"{self.POSTGRES_DB}"
+        )
+
+    @property
+    def test_database_url(self) -> str:
+        return (
+            f"postgresql+asyncpg://"
+            f"{self.POSTGRES_USER}:"
+            f"{self.POSTGRES_PASSWORD}@"
+            f"{self.POSTGRES_HOST}:"
+            f"{self.POSTGRES_PORT}/"
+            f"{self.TEST_DB}"
         )
 
 
