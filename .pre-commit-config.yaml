@@ -17,6 +17,11 @@ repos:
           "fastapi",
           "sqlalchemy",
           "asyncpg",
+          "types-python-jose",
+          "types-passlib",
+          "pydantic",
+          "uuid6",
+          "python-ulid",
         ]
 
 

@@ -10,6 +10,7 @@ from app.enums import CurrencyEnum, UserStatusEnum
 
 class RequestUserModel(BaseModel):
     email: str
+    password: str
 
 
 class RequestUserUpdateModel(BaseModel):

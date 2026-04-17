@@ -1,7 +1,8 @@
 import uuid
+from datetime import datetime
 
 import uuid6
-from sqlalchemy import Column, ForeignKey, Numeric, String, UniqueConstraint
+from sqlalchemy import Column, DateTime, ForeignKey, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from ulid import ULID
@@ -14,6 +15,7 @@ class User(BaseModel):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email = Column(String, nullable=True, unique=True)
     status = Column(String, nullable=True)
+    hashed_password = Column(String, nullable=False)
 
     user_balance = relationship("UserBalance", back_populates="owner")
     transactions = relationship("Transaction", back_populates="user")
@@ -39,3 +41,14 @@ class Transaction(BaseModel):
     status = Column(String, nullable=True)
 
     user = relationship("User", back_populates="transactions")
+
+
+class RefreshToken(BaseModel):
+    __tablename__ = "refresh_token"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    token = Column(Text, nullable=False, unique=True, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False, index=True)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    revoked = Column(DateTime(timezone=True), nullable=True, default=None)
+    created_at = Column(DateTime(timezone=True), default=datetime.now(), nullable=False)
