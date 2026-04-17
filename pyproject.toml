@@ -14,8 +14,17 @@ sqlalchemy = "^2.0.37"
 asyncpg = "^0.30.0"
 uuid6 = "^2025.0.1"
 python-ulid = "^3.1.0"
+python-jose = "^3.5.0"
+passlib = "^1.7.4"
+bcrypt = "^5.0.0"
+python-multipart = "^0.0.27"
+click = "^8.3.3"
+pydantic = {extras = ["email"], version = "^2.13.4"}
+celery = "^5.6.3"
+redis = "^7.4.0"
+flower = "^2.0.1"
+psycopg2-binary = "^2.9.12"
 pydantic-settings = "^2.14.1"
-alembic = "^1.18.4"
 
 [tool.poetry.group.dev.dependencies]
 faker = "^19.10.0"
@@ -31,6 +40,7 @@ pytest-xdist = "^3.3.1"
 mypy = "^1.19.1"
 pre-commit = "^4.5.1"
 ruff = "^0.15.1"
+
 
 [build-system]
 requires = ["poetry-core"]
@@ -85,3 +95,4 @@ line-ending = "auto"
 
 [tool.ruff.lint.per-file-ignores]
 "app/tests/**/*.py" = ["S101", "S106", "S107"]
+"app/manage.py" = ["RUF001"]

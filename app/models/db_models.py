@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 
 import uuid6
-from sqlalchemy import Column, DateTime, ForeignKey, Numeric, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from ulid import ULID
@@ -16,6 +16,7 @@ class User(BaseModel):
     email = Column(String, nullable=True, unique=True)
     status = Column(String, nullable=True)
     hashed_password = Column(String, nullable=False)
+    is_superuser = Column(Boolean, nullable=False, default=False)
 
     user_balance = relationship("UserBalance", back_populates="owner")
     transactions = relationship("Transaction", back_populates="user")

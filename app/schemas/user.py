@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from pydantic.v1 import root_validator
 
 from app.enums import CurrencyEnum, UserStatusEnum
@@ -14,8 +14,11 @@ class RequestUserModel(BaseModel):
     password: str
 
 
-class RequestUserUpdateModel(BaseModel):
-    status: UserStatusEnum
+class RequestUserUpdate(BaseModel):
+    email: EmailStr | None = None
+    status: UserStatusEnum | None = None
+    is_active: bool | None = None
+    is_superuser: bool | None = None
 
 
 class ResponseUserBalanceModel(BaseModel):
@@ -32,6 +35,8 @@ class ResponseUserModel(BaseModel):
     status: UserStatusEnum | None = None
     created: datetime | None = None
     balances: list[ResponseUserBalanceModel] | None = None
+    hashed_password: str | None = None
+    is_superuser: bool | None = None
 
 
 class UserModel(BaseModel):
@@ -59,3 +64,9 @@ class UserBalanceModel(BaseModel):
             raise ValueError("Amount cannot be negative")
 
         return values
+
+
+class AdminUpdateBalanceRequest(BaseModel):
+    currency: CurrencyEnum
+    amount: Decimal = Field(ge=0)
+    replace: bool = True

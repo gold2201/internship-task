@@ -1,3 +1,4 @@
+from typing import Any, Coroutine
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
@@ -8,19 +9,22 @@ from app.core.security import decode_token
 from app.db.session import db_manager
 from app.enums import UserStatusEnum
 from app.models.db_models import User
+from app.repositories.token_repository import TokenRepository
 from app.repositories.transaction_repository import TransactionRepository
 from app.repositories.user_balance_repository import UserBalanceRepository
 from app.repositories.user_repository import UserRepository
+from app.schemas.user import ResponseUserModel
+from app.services.auth_service import AuthService
 from app.services.transaction_service import TransactionService
 from app.services.user_services import UserService
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/endpoints/auth/sign_in")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/endpoint/v1/auth/sign_in")
 
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
     session: AsyncSession = Depends(db_manager.get_async_session),
-) -> User:
+) -> ResponseUserModel:
     payload = decode_token(token)
 
     if not payload:
@@ -60,6 +64,12 @@ async def get_current_user(
         )
 
     return user
+
+
+async def get_current_superuser(current_user: User = Depends(get_current_user)) -> User:
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
+    return current_user
 
 
 async def get_user_repository(session: AsyncSession = Depends(db_manager.get_async_session)) -> UserRepository:
@@ -103,3 +113,11 @@ async def get_transaction_service(
     transaction_repo = TransactionRepository(session)
     balance_repo = UserBalanceRepository(session)
     return TransactionService(transaction_repo, balance_repo)
+
+
+async def get_auth_service(
+    session: AsyncSession = Depends(db_manager.get_async_session),
+) -> AuthService:
+    user_repo = UserRepository(session)
+    token_repo = TokenRepository(session)
+    return AuthService(user_repo, token_repo)

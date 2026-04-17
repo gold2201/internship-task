@@ -1,3 +1,4 @@
+from decimal import Decimal
 from uuid import uuid4
 
 import pytest
@@ -118,7 +119,7 @@ class TestPostUser:
         db_user = result.scalar_one()
         assert len(db_user.user_balance) == len(list(CurrencyEnum))
         for balance in db_user.user_balance:
-            assert float(balance.amount) == 0.0
+            assert Decimal(balance.amount) == 0.00
 
     async def test_returns_422_for_empty_email(self, client, db_session):
         await create_user_with_balances(db_session, email="tester@test.com")
