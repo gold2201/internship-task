@@ -1,4 +1,3 @@
-import typing
 from datetime import datetime
 from enum import StrEnum
 
@@ -18,44 +17,50 @@ class CurrencyEnum(StrEnum):
     DOGE = "DOGE"
     USDT = "USDT"
 
+
 class UserStatusEnum(StrEnum):
     ACTIVE = "ACTIVE"
     BLOCKED = "BLOCKED"
+
 
 class TransactionStatusEnum(StrEnum):
     processed = "PROCESSED"
     roll_backed = "ROLLBACKED"
 
 
-
 class RequestUserModel(BaseModel):
     email: str
+
 
 class RequestUserUpdateModel(BaseModel):
     status: UserStatusEnum
 
+
 class ResponseUserBalanceModel(BaseModel):
-    currency: typing.Optional[CurrencyEnum] = None
-    amount: typing.Optional[float] = None
+    currency: CurrencyEnum | None = None
+    amount: float | None = None
+
 
 class ResponseUserModel(BaseModel):
-    id: typing.Optional[int]
-    email: typing.Optional[str] = None
-    status: typing.Optional[UserStatusEnum] = None
-    created: typing.Optional[datetime] = None
-    balances: typing.Optional[typing.List[ResponseUserBalanceModel]] = None
+    id: int | None
+    email: str | None = None
+    status: UserStatusEnum | None = None
+    created: datetime | None = None
+    balances: list[ResponseUserBalanceModel] | None = None
+
 
 class UserModel(BaseModel):
-    id: typing.Optional[int]
-    email: typing.Optional[str] = None
-    status: typing.Optional[UserStatusEnum] = None
-    created: typing.Optional[datetime] = None
+    id: int | None
+    email: str | None = None
+    status: UserStatusEnum | None = None
+    created: datetime | None = None
+
 
 class UserBalanceModel(BaseModel):
-    id: typing.Optional[int]
-    user_id: typing.Optional[int] = None
-    currency: typing.Optional[CurrencyEnum] = None
-    amount: typing.Optional[float] = None
+    id: int | None
+    user_id: int | None = None
+    currency: CurrencyEnum | None = None
+    amount: float | None = None
 
     @root_validator(pre=True)
     def validate_not_negative(self, values):
@@ -65,14 +70,16 @@ class UserBalanceModel(BaseModel):
 
         return values
 
+
 class RequestTransactionModel(BaseModel):
     currency: CurrencyEnum
     amount: float
 
+
 class TransactionModel(BaseModel):
-    id: typing.Optional[int]
-    user_id: typing.Optional[int] = None
-    currency: typing.Optional[CurrencyEnum] = None
-    amount: typing.Optional[float] = None
-    status: typing.Optional[TransactionStatusEnum] = None
-    created: typing.Optional[datetime] = None
+    id: int | None
+    user_id: int | None = None
+    currency: CurrencyEnum | None = None
+    amount: float | None = None
+    status: TransactionStatusEnum | None = None
+    created: datetime | None = None
