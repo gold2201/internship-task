@@ -12,8 +12,12 @@ repos:
         entry: mypy
         language: python
         types: [ python ]
-        pass_filenames: false
         args: ["--config-file=mypy.ini"]
+        additional_dependencies: [
+          "fastapi",
+          "sqlalchemy",
+          "asyncpg",
+        ]
 
 
 
