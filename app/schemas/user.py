@@ -1,32 +1,10 @@
 from datetime import datetime
-from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel
 from pydantic.v1 import root_validator
 
-
-class CurrencyEnum(StrEnum):
-    USD = "USD"
-    EUR = "EUR"
-    AUD = "AUD"
-    CAD = "CAD"
-    ARS = "ARS"
-    PLN = "PLN"
-    BTC = "BTC"
-    ETH = "ETH"
-    DOGE = "DOGE"
-    USDT = "USDT"
-
-
-class UserStatusEnum(StrEnum):
-    ACTIVE = "ACTIVE"
-    BLOCKED = "BLOCKED"
-
-
-class TransactionStatusEnum(StrEnum):
-    processed = "PROCESSED"
-    roll_backed = "ROLLBACKED"
+from app.enums import CurrencyEnum, UserStatusEnum
 
 
 class RequestUserModel(BaseModel):
@@ -71,17 +49,3 @@ class UserBalanceModel(BaseModel):
             raise ValueError("Amount cannot be negative")
 
         return values
-
-
-class RequestTransactionModel(BaseModel):
-    currency: CurrencyEnum
-    amount: float
-
-
-class TransactionModel(BaseModel):
-    id: int | None
-    user_id: int | None = None
-    currency: CurrencyEnum | None = None
-    amount: float | None = None
-    status: TransactionStatusEnum | None = None
-    created: datetime | None = None
