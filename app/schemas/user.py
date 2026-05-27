@@ -35,7 +35,8 @@ class ResponseUserModel(BaseModel):
     status: UserStatusEnum | None = None
     created: datetime | None = None
     balances: list[ResponseUserBalanceModel] | None = None
-    hashed_password: str | None = None
+    hashed_password: str | None = Field(default=None, exclude=True)
+    is_active: bool | None = None
     is_superuser: bool | None = None
 
 

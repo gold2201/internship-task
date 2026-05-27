@@ -8,7 +8,6 @@ from sqlalchemy import select
 
 from app.core.security import get_password_hash
 from app.db.session import db_manager
-from app.enums import UserStatusEnum
 from app.models.db_models import User
 
 
@@ -55,7 +54,7 @@ async def createsuperuser() -> None:
                 email=email,
                 hashed_password=get_password_hash(password),
                 is_superuser=True,
-                status=UserStatusEnum.ACTIVE,
+                status="ACTIVE",
             )
 
             session.add(user)

@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.api.routers import admin_router, analysis_router, auth_router, transactions_router, users_router
+from app.endpoints.routers import admin_router, analysis_router, auth_router, transactions_router, users_router
 
 
 @asynccontextmanager

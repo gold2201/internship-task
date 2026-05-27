@@ -11,7 +11,7 @@ class TestGetUsers:
         await create_user_with_balances(db_session, email="user1@test.com")
         await create_user_with_balances(db_session, email="user2@test.com")
 
-        response = await client.get("/api/v1/profile")
+        response = await client.get("/endpoints/v1/profile")
 
         assert response.status_code == 200
         data = response.json()
@@ -20,7 +20,7 @@ class TestGetUsers:
     async def test_returns_balances_for_user(self, client, db_session):
         await create_user_with_balances(db_session, email="tester@test.com", status=UserStatusEnum.ACTIVE)
 
-        response = await client.get("/api/v1/profile")
+        response = await client.get("/endpoints/v1/profile")
 
         assert response.status_code == 200
         data = response.json()
@@ -33,7 +33,7 @@ class TestGetUsers:
     async def test_blocked_user(self, client, db_session):
         await create_user_with_balances(db_session, email="tester@test.com", status=UserStatusEnum.BLOCKED)
 
-        response = await client.get("/api/v1/profile")
+        response = await client.get("/endpoints/v1/profile")
 
         assert response.status_code == 403
         assert "blocked" in response.json()["detail"].lower()
@@ -44,7 +44,7 @@ class TestDeleteUser:
     async def test_deactivates_own_profile(self, client, db_session):
         await create_user_with_balances(db_session, email="tester@test.com", status=UserStatusEnum.ACTIVE)
 
-        response = await client.delete("/api/v1/profile")
+        response = await client.delete("/endpoints/v1/profile")
 
         assert response.status_code == 200
         assert "deactivated" in response.json()["message"].lower()
@@ -52,6 +52,6 @@ class TestDeleteUser:
     async def test_blocked_user_cannot_deactivate(self, client, db_session):
         await create_user_with_balances(db_session, email="tester@test.com", status=UserStatusEnum.BLOCKED)
 
-        response = await client.delete("/api/v1/profile")
+        response = await client.delete("/endpoints/v1/profile")
 
         assert response.status_code == 403

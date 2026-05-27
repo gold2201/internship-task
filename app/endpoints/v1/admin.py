@@ -3,12 +3,12 @@ from uuid import UUID
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.routers import admin_router
 from app.core.dependencies import (
     get_transaction_service,
     get_user_service,
 )
 from app.db.session import db_manager
+from app.endpoints.routers import admin_router
 from app.schemas.transaction import TransactionModel
 from app.schemas.user import (
     AdminUpdateBalanceRequest,

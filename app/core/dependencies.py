@@ -19,6 +19,8 @@ from app.services.user_services import UserService
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/endpoint/v1/auth/sign_in")
 
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/endpoints/v1/auth/sign_in", auto_error=False)
+
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
@@ -56,11 +58,38 @@ async def get_current_user(
     user_repo = UserRepository(session)
     user = await user_repo.get_by_id(user_id)
 
-    if not user:
+    if not user or not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
         )
+
+    return user
+
+
+async def get_current_user_optional(
+    token: str | None = Depends(oauth2_scheme_optional),
+    session: AsyncSession = Depends(db_manager.get_async_session),
+) -> ResponseUserModel | None:
+    if not token:
+        return None
+
+    payload = decode_token(token)
+
+    if not payload or payload.get("type") != "access":
+        return None
+
+    user_id_str = payload.get("sub")
+    if not user_id_str:
+        return None
+
+    try:
+        user_id = UUID(user_id_str)
+    except (ValueError, TypeError):
+        return None
+
+    user_repo = UserRepository(session)
+    user = await user_repo.get_by_id(user_id)
 
     return user
 
