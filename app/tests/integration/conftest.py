@@ -6,7 +6,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from app.core.dependencies import get_active_user, get_current_user
+from app.core.dependencies import get_current_user
 from app.core.settings import settings
 from app.db.base import Base
 from app.db.session import db_manager
@@ -71,10 +71,6 @@ async def override_get_current_user():
         return user
 
 
-async def override_get_active_user():
-    return await override_get_current_user()
-
-
 @pytest_asyncio.fixture
 async def db_session() -> AsyncGenerator[AsyncSession]:
     async with SessionLocal() as session:
@@ -85,7 +81,6 @@ async def db_session() -> AsyncGenerator[AsyncSession]:
 async def client():
     app.dependency_overrides[db_manager.get_async_session] = override_get_async_session
     app.dependency_overrides[get_current_user] = override_get_current_user
-    app.dependency_overrides[get_active_user] = override_get_active_user
 
     async with AsyncClient(
         transport=ASGITransport(app=app),

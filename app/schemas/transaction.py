@@ -1,7 +1,8 @@
 from datetime import datetime
 from decimal import Decimal
+from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app.enums import CurrencyEnum, TransactionStatusEnum
 
@@ -12,8 +13,10 @@ class RequestTransactionModel(BaseModel):
 
 
 class TransactionModel(BaseModel):
-    id: int | None
-    user_id: int | None = None
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str | None = None
+    user_id: UUID | None = None
     currency: CurrencyEnum | None = None
     amount: Decimal | None = None
     status: TransactionStatusEnum | None = None

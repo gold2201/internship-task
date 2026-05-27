@@ -10,4 +10,4 @@ admin_router = APIRouter(
     prefix="/endpoint/v1/admin_panel", tags=["admin"], dependencies=[Depends(get_current_superuser)]
 )
 
-from app.api.v1 import user_endpoints, admin_endpoints, analysis_endpoints, auth_endpoints, transaction_endpoint # noqa
+from app.api.v1 import user_endpoints, admin_endpoints, analysis_endpoints, auth_endpoints, transaction_endpoint  # noqa

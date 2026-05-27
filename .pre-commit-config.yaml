@@ -12,6 +12,7 @@ repos:
         entry: mypy
         language: python
         types: [ python ]
+        exclude: ^app/tests/
         args: ["--config-file=mypy.ini"]
         additional_dependencies: [
           "fastapi",
@@ -22,7 +23,8 @@ repos:
           "pydantic",
           "uuid6",
           "python-ulid",
+          "bcrypt",
+          "click",
+          "alembic",
+          "pydantic_settings"
         ]
-
-
-

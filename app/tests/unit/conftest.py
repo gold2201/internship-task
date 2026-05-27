@@ -1,9 +1,15 @@
+import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from app.enums import UserStatusEnum
-from app.tests.unit.transaction_service_test import make_balance, make_user
+
+@pytest.fixture(scope="session")
+def event_loop():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    yield loop
+    loop.close()
 
 
 @pytest.fixture
@@ -29,17 +35,3 @@ def transaction_repo():
 @pytest.fixture
 def session():
     return AsyncMock()
-
-
-@pytest.fixture
-def active_user(user_repo):
-    user = make_user(UserStatusEnum.ACTIVE)
-    user_repo.get_by_id.return_value = user
-    return user
-
-
-@pytest.fixture
-def existing_balance(balance_repo):
-    balance = make_balance(amount=100.0)
-    balance_repo.get_by_user_and_currency.return_value = balance
-    return balance

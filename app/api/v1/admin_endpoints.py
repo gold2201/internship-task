@@ -53,7 +53,7 @@ async def update_balance(
     user_id: UUID,
     balance_data: AdminUpdateBalanceRequest,
     service: UserService = Depends(get_user_service),
-):
+) -> dict:
     return await service.update_balance(
         user_id=user_id,
         balance_data=balance_data,
@@ -65,7 +65,7 @@ async def delete_balance(
     user_id: UUID,
     currency: str,
     service: UserService = Depends(get_user_service),
-):
+) -> dict:
     return await service.delete_balance(
         user_id=user_id,
         currency=currency,
@@ -76,7 +76,7 @@ async def delete_balance(
 async def delete_user(
     user_id: UUID,
     service: UserService = Depends(get_user_service),
-):
+) -> dict:
     return await service.delete_user(user_id=user_id)
 
 
@@ -84,5 +84,5 @@ async def delete_user(
 async def delete_transaction(
     transaction_id: str,
     service: TransactionService = Depends(get_transaction_service),
-):
+) -> dict:
     return await service.hard_delete_transaction(transaction_id=transaction_id)

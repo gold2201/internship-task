@@ -1,5 +1,4 @@
-from datetime import datetime
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,14 +15,15 @@ async def create_user_with_balances(
     email: str | None = None,
     status: UserStatusEnum | str = UserStatusEnum.ACTIVE,
     hashed_password: str = "superpassword",
+    user_id: UUID | None = None,
 ) -> User:
     email = email or f"user-{uuid4().hex}@test.com"
 
     user = User(
+        id=user_id or uuid4(),
         email=email,
         status=_enum_value(status),
         hashed_password=hashed_password,
-        created=datetime.now(),
     )
     session.add(user)
     await session.flush()
@@ -33,7 +33,6 @@ async def create_user_with_balances(
             user_id=user.id,
             currency=_enum_value(currency),
             amount=0,
-            created=datetime.now(),
         )
         for currency in CurrencyEnum
     ]
