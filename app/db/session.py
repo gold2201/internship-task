@@ -1,5 +1,4 @@
 import typing
-from contextlib import asynccontextmanager
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -19,7 +18,6 @@ class DatabaseManager:
         async with self.engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
 
-    @asynccontextmanager
     async def get_async_session(self) -> typing.AsyncGenerator[AsyncSession]:
         async with self.async_session_maker() as session:
             try:

@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,7 +11,7 @@ class TokenRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def save_refresh_token(self, token: str, user_id: int, expires_at: datetime) -> RefreshToken:
+    async def save_refresh_token(self, token: str, user_id: UUID, expires_at: datetime) -> RefreshToken:
         refresh_token = RefreshToken(
             token=token,
             user_id=user_id,
@@ -20,7 +21,7 @@ class TokenRepository:
         await self.session.commit()
         return refresh_token
 
-    async def get_valid_refresh_token(self, token: str, user_id: int) -> RefreshToken | None:
+    async def get_valid_refresh_token(self, token: str, user_id: UUID) -> RefreshToken | None:
         stmt = select(RefreshToken).where(
             RefreshToken.token == token,
             RefreshToken.user_id == user_id,
@@ -37,7 +38,7 @@ class TokenRepository:
         self,
         old_token: RefreshToken,
         new_token_str: str,
-        user_id: int,
+        user_id: UUID,
         expires_at: datetime,
     ) -> RefreshToken:
         old_token.revoked = datetime.now()  # type: ignore[assignment]
@@ -50,7 +51,7 @@ class TokenRepository:
         await self.session.commit()
         return new_token
 
-    async def revoke_all_user_tokens(self, user_id: int) -> None:
+    async def revoke_all_user_tokens(self, user_id: UUID) -> None:
         stmt = (
             update(RefreshToken)
             .where(RefreshToken.user_id == user_id, RefreshToken.revoked.is_(None))
