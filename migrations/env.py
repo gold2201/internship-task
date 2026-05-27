@@ -9,11 +9,14 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from app.core.settings import settings
 from app.db.base import Base
 
+# Импортируем все модели, чтобы Alembic их видел
+from app.models.db_models import User, UserBalance, Transaction, RefreshToken  # noqa: F401
+
 config = context.config
 
+# Передаём URL из settings в конфиг
 config.set_main_option("sqlalchemy.url", settings.database_url)
 
-# Interpret the config file for Python logging.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 

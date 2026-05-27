@@ -1,4 +1,3 @@
-import builtins
 from datetime import datetime
 from decimal import Decimal
 
@@ -32,7 +31,7 @@ class TransactionAnalyticsRepository:
 
     async def get_not_rollbacked_deposit_rows(
         self, dt_gt: datetime, dt_lt: datetime
-    ) -> builtins.list[tuple[Decimal | None, str | None]]:
+    ) -> list[tuple[Decimal | None, str | None]]:
         stmt = select(Transaction.amount, Transaction.currency).where(
             Transaction.created >= dt_gt,
             Transaction.created < dt_lt,
@@ -44,7 +43,7 @@ class TransactionAnalyticsRepository:
 
     async def get_not_rollbacked_withdraw_rows(
         self, dt_gt: datetime, dt_lt: datetime
-    ) -> builtins.list[tuple[Decimal | None, str | None]]:
+    ) -> list[tuple[Decimal | None, str | None]]:
         stmt = select(Transaction.amount, Transaction.currency).where(
             Transaction.created >= dt_gt,
             Transaction.created < dt_lt,

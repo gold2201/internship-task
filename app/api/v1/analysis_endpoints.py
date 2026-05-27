@@ -3,10 +3,8 @@ from datetime import datetime, timedelta
 from fastapi import Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.dependencies import get_current_user
+from app.api.routers import analysis_router
 from app.db.session import db_manager
-from app.endpoints.routers import analysis_router
-from app.models.db_models import User
 from app.repositories.transaction_analytics_repository import TransactionAnalyticsRepository
 from app.repositories.user_analytics_repository import UserAnalyticsRepository
 from app.schemas.analitics import TransactionAnalysisItem
@@ -21,7 +19,6 @@ from app.services.transaction_analytics_service import (
 )
 async def get_transaction_analysis(
     session: AsyncSession = Depends(db_manager.get_async_session),
-    current_user: User = Depends(get_current_user),
 ) -> list[TransactionAnalysisItem]:
     now = datetime.now()
     dt_gt: datetime = now - timedelta(weeks=1)

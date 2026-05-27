@@ -74,7 +74,7 @@ class TestPostTransaction:
         data = response.json()
         assert data["currency"] == "USD"
         assert Decimal(data["amount"]) == Decimal("200.0")
-        assert data["status"] == "PROCESSED"
+        assert data["status"] == TransactionStatusEnum.PROCESSED
         assert data["user_id"] == str(user.id)
 
         balance = await db_session.execute(
@@ -157,7 +157,7 @@ class TestPatchRollbackTransaction:
             f"/api/v1/transactions/{tx_id}",
         )
         assert response.status_code == 200
-        assert response.json()["status"] == "ROLLBACKED"
+        assert response.json()["status"] == TransactionStatusEnum.ROLLBACKED
 
         balance = await db_session.execute(
             select(UserBalance).where(
