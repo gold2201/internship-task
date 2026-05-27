@@ -3,18 +3,16 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.db.session import db_manager
-from app.endpoints.v1 import analysis, transaction, user
+from app.endpoints.routers import transactions_router, users_router, analysis_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> typing.AsyncGenerator[None]:
-    await db_manager.create_tables()
     yield
 
 
 app = FastAPI(lifespan=lifespan)
 
-app.include_router(analysis.router)
-app.include_router(transaction.router)
-app.include_router(user.router)
+app.include_router(transactions_router)
+app.include_router(users_router)
+app.include_router(analysis_router)
