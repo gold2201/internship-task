@@ -5,6 +5,7 @@ from decimal import Decimal
 from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.enums import TransactionStatusEnum
 from app.models.db_models import Transaction
 
 
@@ -49,11 +50,11 @@ class TransactionRepository:
         result = await self.session.execute(stmt)
         return result.scalar_one()
 
-    async def rollback_transaction (self, transaction_id: int) -> Transaction:
+    async def rollback_transaction(self, transaction_id: int) -> Transaction:
         stmt = (
             update(Transaction)
             .where(Transaction.id == transaction_id)
-            .values(status="ROLLBACKED", updated=datetime.now())
+            .values(status=TransactionStatusEnum.ROLLBACKED, updated=datetime.now())
             .returning(Transaction)
         )
 

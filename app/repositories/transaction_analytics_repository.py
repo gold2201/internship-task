@@ -5,6 +5,7 @@ from decimal import Decimal
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.enums import TransactionStatusEnum
 from app.models.db_models import Transaction
 
 
@@ -24,7 +25,7 @@ class TransactionAnalyticsRepository:
         stmt = select(func.count(Transaction.id)).where(
             Transaction.created >= dt_gt,
             Transaction.created < dt_lt,
-            Transaction.status != "ROLLBACKED",
+            Transaction.status != TransactionStatusEnum.ROLLBACKED,
         )
         result = await self.session.execute(stmt)
         return result.scalar_one()
@@ -36,7 +37,7 @@ class TransactionAnalyticsRepository:
             Transaction.created >= dt_gt,
             Transaction.created < dt_lt,
             Transaction.amount > 0,
-            Transaction.status != "ROLLBACKED",
+            Transaction.status != TransactionStatusEnum.ROLLBACKED,
         )
         result = await self.session.execute(stmt)
         return [(row[0], row[1]) for row in result.all()]
@@ -48,7 +49,7 @@ class TransactionAnalyticsRepository:
             Transaction.created >= dt_gt,
             Transaction.created < dt_lt,
             Transaction.amount < 0,
-            Transaction.status != "ROLLBACKED",
+            Transaction.status != TransactionStatusEnum.ROLLBACKED,
         )
         result = await self.session.execute(stmt)
         return [(row[0], row[1]) for row in result.all()]

@@ -3,6 +3,7 @@ from datetime import datetime
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.enums import TransactionStatusEnum
 from app.models.db_models import Transaction, User
 
 
@@ -43,7 +44,7 @@ class UserAnalyticsRepository:
                 Transaction.created >= dt_gt,
                 Transaction.created < dt_lt,
                 Transaction.amount > 0,
-                Transaction.status != "ROLLBACKED",
+                Transaction.status != TransactionStatusEnum.ROLLBACKED,
             )
         )
         result = await self.session.execute(stmt)

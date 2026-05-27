@@ -3,8 +3,10 @@ from datetime import datetime, timedelta
 from fastapi import Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.dependencies import get_current_user
 from app.db.session import db_manager
 from app.endpoints.routers import analysis_router
+from app.models.db_models import User
 from app.repositories.transaction_analytics_repository import TransactionAnalyticsRepository
 from app.repositories.user_analytics_repository import UserAnalyticsRepository
 from app.schemas.analitics import TransactionAnalysisItem
@@ -14,9 +16,12 @@ from app.services.transaction_analytics_service import (
 )
 
 
-@analysis_router.get("/transactions/analysis", response_model=list[TransactionAnalysisItem], status_code=status.HTTP_200_OK)
+@analysis_router.get(
+    "/transactions/analysis", response_model=list[TransactionAnalysisItem], status_code=status.HTTP_200_OK
+)
 async def get_transaction_analysis(
     session: AsyncSession = Depends(db_manager.get_async_session),
+    current_user: User = Depends(get_current_user),
 ) -> list[TransactionAnalysisItem]:
     now = datetime.now()
     dt_gt: datetime = now - timedelta(weeks=1)
@@ -63,15 +68,17 @@ async def get_transaction_analysis(
             not_rollbacked_transactions_count=not_rollbacked_transactions_count,
         )
 
-        has_data = any([
-            result.registered_users_count > 0,
-            result.registered_and_deposit_users_count > 0,
-            result.registered_and_not_rollbacked_deposit_users_count > 0,
-            result.not_rollbacked_deposit_amount > 0,
-            result.not_rollbacked_withdraw_amount > 0,
-            result.transactions_count > 0,
-            result.not_rollbacked_transactions_count > 0,
-        ])
+        has_data = any(
+            [
+                result.registered_users_count > 0,
+                result.registered_and_deposit_users_count > 0,
+                result.registered_and_not_rollbacked_deposit_users_count > 0,
+                result.not_rollbacked_deposit_amount > 0,
+                result.not_rollbacked_withdraw_amount > 0,
+                result.transactions_count > 0,
+                result.not_rollbacked_transactions_count > 0,
+            ]
+        )
 
         if has_data:
             results.append(result)
