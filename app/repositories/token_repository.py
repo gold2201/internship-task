@@ -30,10 +30,6 @@ class TokenRepository:
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def revoke_refresh_token(self, refresh_token: RefreshToken) -> None:
-        refresh_token.revoked = datetime.now()  # type: ignore[assignment]
-        await self.session.commit()
-
     async def save_and_revoke(
         self,
         old_token: RefreshToken,

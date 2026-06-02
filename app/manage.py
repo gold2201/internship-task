@@ -65,8 +65,10 @@ async def createsuperuser() -> None:
             click.echo(f"  ID: {user.id}")
             break
 
+
     except Exception as e:
-        await session.rollback()
+        if session is not None:
+            await session.rollback()
         click.echo(f"Oшибка: {e!s}")
 
 

@@ -1,19 +1,15 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any
 
+from celery import Task
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.celery_app import celery_app
 from app.core.settings import settings
 from app.repositories.transaction_analytics_repository import TransactionAnalyticsRepository
-from app.repositories.user_analytics_repository import UserAnalyticsRepository
 from app.schemas.analitics import TransactionAnalysisItem
-from app.services.transaction_analytics_service import (
-    get_not_rollbacked_deposit_amount,
-    get_not_rollbacked_withdraw_amount,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -22,78 +18,44 @@ SyncSessionLocal = sessionmaker(bind=sync_engine, expire_on_commit=False)
 
 
 def generate_analysis() -> list[TransactionAnalysisItem]:
-    now = datetime.now()
-    dt_gt = now - timedelta(weeks=1)
-    dt_lt = now
-    results: list[TransactionAnalysisItem] = []
-
-    logger.info("Starting analysis generation: from %s to %s, total weeks: 52", dt_gt.isoformat(), dt_lt.isoformat())
+    logger.info("Starting analysis generation")
 
     with SyncSessionLocal() as session:
-        transaction_analytics_repo = TransactionAnalyticsRepository(session)
-        user_analytics_repo = UserAnalyticsRepository(session)
+        repo = TransactionAnalyticsRepository(session)
+        rows = repo.get_full_analysis()
 
-        for week_num in range(52):
-            logger.debug("Processing week %d/%d: %s - %s", week_num + 1, 52, dt_gt.isoformat(), dt_lt.isoformat())
-
-            registered_users_count = user_analytics_repo.get_registered_users_count(dt_gt=dt_gt, dt_lt=dt_lt)
-            registered_and_deposit_users_count = user_analytics_repo.get_registered_and_deposit_users_count(
-                dt_gt=dt_gt, dt_lt=dt_lt
-            )
-            registered_and_not_rollbacked_deposit_users_count = (
-                user_analytics_repo.get_registered_and_not_rollbacked_deposit_users_count(dt_gt=dt_gt, dt_lt=dt_lt)
-            )
-
-            not_rollbacked_deposit_rows = transaction_analytics_repo.get_not_rollbacked_deposit_rows(
-                dt_gt=dt_gt, dt_lt=dt_lt
-            )
-            not_rollbacked_deposit_amount = get_not_rollbacked_deposit_amount(not_rollbacked_deposit_rows)
-
-            not_rollbacked_withdraw_rows = transaction_analytics_repo.get_not_rollbacked_withdraw_rows(
-                dt_gt=dt_gt, dt_lt=dt_lt
-            )
-            not_rollbacked_withdraw_amount = get_not_rollbacked_withdraw_amount(not_rollbacked_withdraw_rows)
-
-            transactions_count = transaction_analytics_repo.get_transactions_count(dt_gt=dt_gt, dt_lt=dt_lt)
-            not_rollbacked_transactions_count = transaction_analytics_repo.get_not_rollbacked_transactions_count(
-                dt_gt=dt_gt, dt_lt=dt_lt
+        results = []
+        for row in rows:
+            item = TransactionAnalysisItem(
+                start_date=row["week_start"],
+                end_date=row["week_end"],
+                registered_users_count=row["registered_users"],
+                registered_and_deposit_users_count=row["deposit_users"],
+                registered_and_not_rollbacked_deposit_users_count=row["not_rollbacked_deposit_users"],
+                not_rollbacked_deposit_amount=row["deposit_amount"],
+                not_rollbacked_withdraw_amount=row["withdraw_amount"],
+                transactions_count=row["total_tx"],
+                not_rollbacked_transactions_count=row["not_rollbacked_tx"],
             )
 
-            result = TransactionAnalysisItem(
-                start_date=dt_gt,
-                end_date=dt_lt,
-                registered_users_count=registered_users_count,
-                registered_and_deposit_users_count=registered_and_deposit_users_count,
-                registered_and_not_rollbacked_deposit_users_count=registered_and_not_rollbacked_deposit_users_count,
-                not_rollbacked_deposit_amount=not_rollbacked_deposit_amount,
-                not_rollbacked_withdraw_amount=not_rollbacked_withdraw_amount,
-                transactions_count=transactions_count,
-                not_rollbacked_transactions_count=not_rollbacked_transactions_count,
-            )
-
-            has_data = any(
+            if any(
                 [
-                    result.registered_users_count > 0,
-                    result.registered_and_deposit_users_count > 0,
-                    result.registered_and_not_rollbacked_deposit_users_count > 0,
-                    result.not_rollbacked_deposit_amount > 0,
-                    result.not_rollbacked_withdraw_amount > 0,
-                    result.transactions_count > 0,
-                    result.not_rollbacked_transactions_count > 0,
+                    item.registered_users_count > 0,
+                    item.registered_and_deposit_users_count > 0,
+                    item.registered_and_not_rollbacked_deposit_users_count > 0,
+                    item.not_rollbacked_deposit_amount > 0,
+                    item.not_rollbacked_withdraw_amount > 0,
+                    item.transactions_count > 0,
+                    item.not_rollbacked_transactions_count > 0,
                 ]
-            )
-
-            if has_data:
-                results.append(result)
-
-            dt_gt -= timedelta(weeks=1)
-            dt_lt -= timedelta(weeks=1)
+            ):
+                results.append(item)
 
         return results
 
 
 @celery_app.task(bind=True, name="generate_transaction_analysis")
-def generate_transaction_analysis(self) -> dict[str, Any]:
+def generate_transaction_analysis(self: Task) -> dict[str, Any]:
     task_id = self.request.id
     logger.info("Celery task started: task_id=%s, name=%s", task_id, self.name)
 

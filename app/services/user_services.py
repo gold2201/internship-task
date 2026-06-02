@@ -7,15 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.enums import CurrencyEnum, UserStatusEnum
 from app.exceptions.exceptions import (
     BadRequestDataException,
-    UserAlreadyActiveException,
-    UserAlreadyBlockedException,
     UserAlreadyExistsException,
     UserNotExistsException,
 )
 from app.models.db_models import User, UserBalance
 from app.repositories.user_balance_repository import UserBalanceRepository
 from app.repositories.user_repository import UserRepository
-from app.schemas.user import AdminUpdateBalanceRequest, ResponseUserModel
+from app.schemas.user import AdminUpdateBalanceRequest, RequestUserUpdate, ResponseUserModel
 
 
 class UserService:
@@ -32,7 +30,7 @@ class UserService:
     async def get_all_users(self) -> list[ResponseUserModel]:
         return list(await self.user_repo.get_all_users())
 
-    async def create_user(self, email: str, session: AsyncSession) -> ResponseUserModel:
+    async def create_user(self, email: str, session: AsyncSession) -> ResponseUserModel | None:
         email = email.strip().replace(" ", "")
         if not email:
             raise BadRequestDataException(422, "Email can't be empty")
@@ -55,23 +53,23 @@ class UserService:
 
         return await self.user_repo.get_by_id(db_user.id)
 
-    async def update_status(
-        self, user_id: UUID, new_status: UserStatusEnum, session: AsyncSession
-    ) -> ResponseUserModel:
+    async def update_user(
+        self, user_id: UUID, update_data: RequestUserUpdate, session: AsyncSession
+    ) -> ResponseUserModel | None:
         user = await self.user_repo.get_by_id(user_id)
         if not user:
             raise UserNotExistsException(404, f"User with id={user_id} does not exist")
 
-        if user.status == UserStatusEnum.BLOCKED and new_status == UserStatusEnum.BLOCKED:
-            raise UserAlreadyBlockedException(400, "User already blocked")
-        if user.status == UserStatusEnum.ACTIVE and new_status == UserStatusEnum.ACTIVE:
-            raise UserAlreadyActiveException(400, "User already active")
+        fields_to_update = update_data.model_dump(exclude_unset=True)
 
-        updated = await self.user_repo.update_status(user_id, new_status)
+        if not fields_to_update:
+            raise BadRequestDataException(400, "No fields to update")
+
+        updated = await self.user_repo.update_user_fields(user_id, **fields_to_update)
         await session.commit()
         return updated
 
-    async def deactivate_user(self, user_id: UUID) -> ResponseUserModel:
+    async def deactivate_user(self, user_id: UUID) -> ResponseUserModel | None:
         user = await self.user_repo.get_by_id(user_id)
         if not user:
             raise UserNotExistsException(404, f"User with id={user_id} not found")

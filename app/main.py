@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from app.endpoints.routers import admin_router, analysis_router, auth_router, transactions_router, users_router
 
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> typing.AsyncGenerator[None]:
     yield
